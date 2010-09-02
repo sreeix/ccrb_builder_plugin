@@ -3,7 +3,8 @@ require 'json'
 class BuildCopStatusUpdate < BuilderPlugin
   def initialize(project = nil)
     @project = project
-    @hostname =`hostname`.strip
+    @hostname =`curl -s http://169.254.169.254/latest/meta-data/instance-id`.strip
+    
   end
   # Called by Project at the start of a new build before any other build events.
   def build_initiated
@@ -20,13 +21,13 @@ class BuildCopStatusUpdate < BuilderPlugin
       puts "Assuming Rails old versions and running rake gems:install"
       `cd #{File.join(build.project.path, 'work')} && rake gems:install`
     end
-    put (build, :current_status => :building)
+    rest_put(build, :current_status => :building)
     
   end
   
   # Called by Project immediately after the build has finished running.
   def build_finished(build)
-    put(build, :current_status => (build.successful? ? :success : :failure),
+    rest_put(build, :current_status => (build.successful? ? :success : :failure),
                :last_build_on => DateTime.now,
                :last_build_status => project.last_complete_build_status,
                :last_build_time => Time.now - @start)
@@ -34,17 +35,17 @@ class BuildCopStatusUpdate < BuilderPlugin
   
   # Called by Project after the completion of a build if the previous build was successful and this one is a failure.
   def build_broken(build, previous_build)
-    put (build, :current_status => :failed)
+    rest_put (build, :current_status => :failed)
   end
   
   # Called by Project after the completion of a build if the previous build was a failure and this one was successful.
   def build_fixed(build, previous_build)
-    put build, :current_status => :success
+    rest_put build, :current_status => :success
   end
   
   # Called by Project if the build fails internally with a CC.rb exception.
   def build_loop_failed(exception)
-    put build, :current_status => :failed
+    rest_put build, :current_status => :failed
   end
 
 
@@ -85,8 +86,8 @@ class BuildCopStatusUpdate < BuilderPlugin
   def sleeping
   end
   
-  def put(build, args)
-    puts "throwing some data to the ##{buildcop_url}/#{@hostname}/#{build.project.name} -> #{args.inspect}"
+  def rest_put(build, args)
+    puts "throwing some data to the #{buildcop_url}/#{@hostname}/#{build.project.name} -> #{args.inspect}"
     RestClient.put "#{buildcop_url}/build_loop/#{@hostname}/#{build.project.name}", args
   end
   def buildcop_url

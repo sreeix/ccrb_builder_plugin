@@ -3,8 +3,7 @@ require 'json'
 class BuildCopStatusUpdate < BuilderPlugin
   def initialize(project = nil)
     @project = project
-    @hostname =`curl -s http://169.254.169.254/latest/meta-data/instance-id`.strip
-    
+    @hostname =`curl -s http://169.254.169.254/latest/meta-data/public-hostname`.strip
   end
   # Called by Project at the start of a new build before any other build events.
   def build_initiated

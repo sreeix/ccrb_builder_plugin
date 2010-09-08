@@ -13,7 +13,7 @@ class BuildCopStatusUpdate < BuilderPlugin
   # Called by Project after some basic logging and the configuration_modified check and just before the build begins running, 
   def build_started(build)
     work_dir = File.join(build.project.path, 'work')
-    if(File.exists?(gem_file))
+    if(File.exists?(File.join(work_dir,"Gemfile")))
       puts "Gemfile found for the project, installing it"
       `cd #{work_dir} && bundle install`
     else

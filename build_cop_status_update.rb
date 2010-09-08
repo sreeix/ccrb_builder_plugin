@@ -12,16 +12,15 @@ class BuildCopStatusUpdate < BuilderPlugin
 
   # Called by Project after some basic logging and the configuration_modified check and just before the build begins running, 
   def build_started(build)
-    gem_file = File.join(build.project.path, 'work',"Gemfile")
+    work_dir = File.join(build.project.path, 'work')
     if(File.exists?(gem_file))
       puts "Gemfile found for the project, installing it"
-      `BUNDLE_GEMFILE=#{gem_file} bundle install`
+      `cd #{work_dir} && bundle install`
     else
       puts "Assuming Rails old versions and running rake gems:install"
       `cd #{File.join(build.project.path, 'work')} && rake gems:install`
     end
     rest_put(build, :current_status => :building)
-    
   end
   
   # Called by Project immediately after the build has finished running.
@@ -34,7 +33,7 @@ class BuildCopStatusUpdate < BuilderPlugin
   
   # Called by Project after the completion of a build if the previous build was successful and this one is a failure.
   def build_broken(build, previous_build)
-    rest_put (build, :current_status => :failed)
+    rest_put (build, :current_status => :failure)
   end
   
   # Called by Project after the completion of a build if the previous build was a failure and this one was successful.
@@ -44,7 +43,7 @@ class BuildCopStatusUpdate < BuilderPlugin
   
   # Called by Project if the build fails internally with a CC.rb exception.
   def build_loop_failed(exception)
-    rest_put build, :current_status => :failed
+    rest_put build, :current_status => :failure
   end
 
 

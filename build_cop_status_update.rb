@@ -18,7 +18,7 @@ class BuildCopStatusUpdate < BuilderPlugin
       `cd #{work_dir} && bundle install`
     else
       puts "Assuming Rails old versions and running rake gems:install"
-      `cd #{File.join(build.project.path, 'work')} && rake gems:install`
+      `cd #{work_dir} && rake gems:install`
     end
     rest_put(build, :current_status => :building)
   end

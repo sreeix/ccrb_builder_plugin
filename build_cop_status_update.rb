@@ -1,3 +1,4 @@
+
 require 'rest_client'
 require 'json'
 class BuildCopStatusUpdate < BuilderPlugin
